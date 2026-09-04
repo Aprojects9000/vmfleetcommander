@@ -1,0 +1,17 @@
+# Azure Deployment Artifacts
+*.json
+!parameters.json
+*.tar.gz
+
+# Environment / Secret Files
+.env
+*.pem
+*.key
+
+# Editor / System Files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Directories
+seperate-md-files-of-the-steps/
