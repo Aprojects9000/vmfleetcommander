@@ -1,4 +1,3 @@
-// Target scope set to subscription to allow resource group creation
 targetScope = 'subscription'
 
 @description('The primary Azure region for deployment')
@@ -17,24 +16,24 @@ param environment string = 'dev'
 @maxLength(10)
 param workloadName string = 'vmfleet'
 
+@description('Number of VM instances to provision')
+@minValue(1)
+@maxValue(10)
+param vmCount int = 2
+
+@description('VM Size SKU')
+param vmSize string = 'Standard_B2s_v2'
+
+@description('Administrator password for the VMs')
+@secure()
+param adminPassword string
+
 // --- NAMING CONVENTION VARIABLES ---
-// Pattern: <workload>-<environment>-<region>-<resource-type>
 var locationShort = toLower(location)
 var baseName = '${toLower(workloadName)}-${toLower(environment)}-${locationShort}'
-
-// Dynamic Resource Group Name
 var resourceGroupName = '${baseName}-rg'
 
-// Example of formatted resource names (to be used when adding child resources)
-// Storage Account names must be lowercase alphanumeric only and <= 24 chars
-var uniqueHash = uniqueString(subscription().subscriptionId, workloadName, environment)
-var storageAccountName = take('st${toLower(workloadName)}${toLower(environment)}${uniqueHash}', 24)
-
-// Virtual Network Name
-var vnetName = '${baseName}-vnet'
-
-// --- RESOURCES ---
-@description('Main Resource Group for VM Fleet Commander')
+// --- RESOURCE GROUP ---
 resource fleetResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
   name: resourceGroupName
   location: location
@@ -45,8 +44,31 @@ resource fleetResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
   }
 }
 
+// --- MODULE DEPLOYMENTS (SCOPED TO RESOURCE GROUP) ---
+
+// Deploy Supporting Network (VNet & Subnet)
+module networkModule 'modules/network.bicep' = {
+  name: 'networkDeployment'
+  scope: fleetResourceGroup
+  params: {
+    location: location
+    vnetName: '${baseName}-vnet'
+  }
+}
+
+// Loop to deploy VMs using the VM module
+module vmModule 'modules/vm.bicep' = [for i in range(0, vmCount): {
+  name: 'vmDeployment-${i}'
+  scope: fleetResourceGroup
+  params: {
+    vmName: '${baseName}-vm-${i}'
+    location: location
+    vmSize: vmSize
+    adminPasswordOrKey: adminPassword
+    subnetId: networkModule.outputs.subnetId
+  }
+}]
+
 // --- OUTPUTS ---
 output resourceGroupName string = fleetResourceGroup.name
-output resourceGroupId string = fleetResourceGroup.id
-output calculatedStorageName string = storageAccountName
-output calculatedVnetName string = vnetName
+output deployedVmCount int = vmCount
