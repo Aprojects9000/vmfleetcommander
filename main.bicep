@@ -46,7 +46,7 @@ resource fleetResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
 
 // --- MODULE DEPLOYMENTS (SCOPED TO RESOURCE GROUP) ---
 
-// Deploy Supporting Network (VNet & Subnet)
+// Deploy Supporting Network (VNet, Subnet, and NSG)
 module networkModule 'modules/network.bicep' = {
   name: 'networkDeployment'
   scope: fleetResourceGroup
@@ -56,7 +56,7 @@ module networkModule 'modules/network.bicep' = {
   }
 }
 
-// Loop to deploy VMs using the VM module
+// Loop to deploy VMs using the VM module attached to the secure subnet
 module vmModule 'modules/vm.bicep' = [for i in range(0, vmCount): {
   name: 'vmDeployment-${i}'
   scope: fleetResourceGroup
