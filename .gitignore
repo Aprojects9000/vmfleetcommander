@@ -1,6 +1,6 @@
 # Azure Deployment Artifacts
 *.json
-!parameters.json
+!parameters.*.json
 *.tar.gz
 
 # Environment / Secret Files

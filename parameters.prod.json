@@ -15,7 +15,7 @@
       "value": 5
     },
     "vmSize": {
-      "value": "Standard_D2s_v3"
+      "value": "Standard_B2s_v2"
     },
     "adminPassword": {
       "value": "ComplexPasswordProd987!"
