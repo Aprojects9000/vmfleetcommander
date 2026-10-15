@@ -12,7 +12,7 @@
       "value": "vmfleet"
     },
     "vmCount": {
-      "value": 5
+      "value": 1
     },
     "vmSize": {
       "value": "Standard_B2s_v2"
